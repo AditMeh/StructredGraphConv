@@ -1,5 +1,5 @@
 import numpy as np
-
+import tqdm
 from .factorizer import AdjacencyFactorizer
 
 
@@ -64,18 +64,19 @@ class GreedyFactorizer(AdjacencyFactorizer):
         A_nonzero = adj_mtx[~np.all(adj_mtx == 0, axis=1), :]
         n_nonzero_rows = A_nonzero.shape[0]
         M2 = np.zeros((n_hidden, adj_mtx.shape[1]))
-        for i in range(n_hidden):
+        for i in tqdm.tqdm(range(n_hidden)):
             M2[i, :] = A_nonzero[i % n_nonzero_rows]
 
         # find each row of M1
         M1 = np.ones((adj_mtx.shape[0], n_hidden))
-        for i in range(M1.shape[0]):
-            # Find indices where A is zero on the ith row
-            Ai_zero = np.where(adj_mtx[i, :] == 0)[0]
+        mask = (adj_mtx == 0)
+        mask = np.expand_dims(mask, 1)
+        mask = np.repeat(mask, repeats = mask.shape[0], axis=1)
 
-            # find row using closed-form solution
-            # find unique entries (rows) in j-th columns of M2 where Aij = 0
-            row_idx = np.unique(np.where(M2[:, Ai_zero] == 1)[0])
-            M1[i, row_idx] = 0.0
-
+        data = np.expand_dims(M2, 0)
+        data = np.repeat(data, repeats = data.shape[1], axis=0)
+        data[~mask] = 0.0
+        
+        row_indics = np.sum(data, axis=2) > 0
+        M1[row_indics] = 0.0
         return M1, M2
