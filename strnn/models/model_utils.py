@@ -5,4 +5,5 @@ NONLINEARITIES = {
     'tanh': nn.Tanh(),
     'softplus': nn.Softplus(),
     'relu': nn.ReLU(),
+    'identity': nn.Identity()
 }
